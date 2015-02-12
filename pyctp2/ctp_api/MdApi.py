@@ -37,20 +37,13 @@ class MdSpi:
     def register_api(self, api):
         self.api=api
 
-    def OnRspUserLogout(self, pUserLogout, pRspInfo, nRequestID, bIsLast):
-        '''登出请求响应'''
+    def OnHeartBeatWarning(self, nTimeLapse):
+        '''心跳超时警告。当长时间未收到报文时，该方法被调用。
+@param nTimeLapse 距离上次接收报文的时间'''
         pass
 
     def OnRtnDepthMarketData(self, pDepthMarketData):
         '''深度行情通知'''
-        pass
-
-    def OnRspUserLogin(self, pRspUserLogin, pRspInfo, nRequestID, bIsLast):
-        '''登录请求响应'''
-        pass
-
-    def OnFrontConnected(self, ):
-        '''当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。'''
         pass
 
     def OnFrontDisconnected(self, nReason):
@@ -63,13 +56,20 @@ class MdSpi:
         0x2003 收到错误报文'''
         pass
 
-    def OnRspError(self, pRspInfo, nRequestID, bIsLast):
-        '''错误应答'''
+    def OnFrontConnected(self, ):
+        '''当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。'''
         pass
 
-    def OnHeartBeatWarning(self, nTimeLapse):
-        '''心跳超时警告。当长时间未收到报文时，该方法被调用。
-@param nTimeLapse 距离上次接收报文的时间'''
+    def OnRspUserLogout(self, pUserLogout, pRspInfo, nRequestID, bIsLast):
+        '''登出请求响应'''
+        pass
+
+    def OnRspUserLogin(self, pRspUserLogin, pRspInfo, nRequestID, bIsLast):
+        '''登录请求响应'''
+        pass
+
+    def OnRspError(self, pRspInfo, nRequestID, bIsLast):
+        '''错误应答'''
         pass
 
     def OnRspSubMarketData(self, pSpecificInstrument, pRspInfo, nRequestID, bIsLast):
@@ -92,23 +92,12 @@ class MdApi:
     def __init__(self, api_ptr):
         self.api_ptr = api_ptr
 
-    def GetTradingDay(self, ):
-        '''获取当前交易日
-@retrun 获取到的交易日
-@remark 只有登录成功后,才能得到正确的交易日'''
-        return tou(_ctp_Md.GetTradingDay(self.api_ptr, ))
-
-    def Release(self, ):
-        '''删除接口对象本身
-@remark 不再使用本接口对象时,调用该函数删除接口对象'''
-        return _ctp_Md.Release(self.api_ptr, )
-
-
-    def UnSubscribeMarketData(self, InstrumentIDs):
-        """订阅/退订行情。
-        @param ppInstrumentIDs list of 合约ID
-        """
-        return _ctp_Md.UnSubscribeMarketData(self.api_ptr, InstrumentIDs)
+    def RegisterSpi(self, pSpi):
+        '''注册回调接口
+@param pSpi 派生自回调接口类的实例'''
+        ret = _ctp_Md.RegisterSpi(self.api_ptr, pSpi)
+        pSpi.register_api(self)
+        return ret
 
     def RegisterNameServer(self, pszNsAddress):
         '''注册名字服务器网络地址
@@ -118,10 +107,6 @@ class MdApi:
 @remark RegisterNameServer优先于RegisterFront'''
         return _ctp_Md.RegisterNameServer(self.api_ptr, pszNsAddress)
 
-    def ReqUserLogout(self, pUserLogout, nRequestID):
-        '''登出请求'''
-        return _ctp_Md.ReqUserLogout(self.api_ptr, pUserLogout, nRequestID)
-
 
     def SubscribeMarketData(self, InstrumentIDs):
         """订阅/退订行情。
@@ -129,31 +114,23 @@ class MdApi:
         """
         return _ctp_Md.SubscribeMarketData(self.api_ptr, InstrumentIDs)
 
-    def RegisterSpi(self, pSpi):
-        '''注册回调接口
-@param pSpi 派生自回调接口类的实例'''
-        ret = _ctp_Md.RegisterSpi(self.api_ptr, pSpi)
-        pSpi.register_api(self)
-        return ret
+    def RegisterFensUserInfo(self, pFensUserInfo):
+        '''注册名字服务器用户信息
+@param pFensUserInfo：用户信息。'''
+        return _ctp_Md.RegisterFensUserInfo(self.api_ptr, pFensUserInfo)
 
-    def ReqUserLogin(self, pReqUserLoginField, nRequestID):
-        '''用户登录请求'''
-        return _ctp_Md.ReqUserLogin(self.api_ptr, pReqUserLoginField, nRequestID)
+    def ReqUserLogout(self, pUserLogout, nRequestID):
+        '''登出请求'''
+        return _ctp_Md.ReqUserLogout(self.api_ptr, pUserLogout, nRequestID)
 
     def Init(self, ):
         '''初始化
 @remark 初始化运行环境,只有调用后,接口才开始工作'''
         return _ctp_Md.Init(self.api_ptr, )
 
-    def Join(self, ):
-        '''等待接口线程结束运行
-@return 线程退出代码'''
-        return _ctp_Md.Join(self.api_ptr, )
-
-    def RegisterFensUserInfo(self, pFensUserInfo):
-        '''注册名字服务器用户信息
-@param pFensUserInfo：用户信息。'''
-        return _ctp_Md.RegisterFensUserInfo(self.api_ptr, pFensUserInfo)
+    def ReqUserLogin(self, pReqUserLogin, nRequestID):
+        '''用户登录请求'''
+        return _ctp_Md.ReqUserLogin(self.api_ptr, pReqUserLogin, nRequestID)
 
     def RegisterFront(self, pszFrontAddress):
         '''注册前置机网络地址
@@ -161,4 +138,27 @@ class MdApi:
 @remark 网络地址的格式为：“protocol://ipaddress:port”，如：”tcp://127.0.0.1:17001”。
 @remark “tcp”代表传输协议，“127.0.0.1”代表服务器地址。”17001”代表服务器端口号。'''
         return _ctp_Md.RegisterFront(self.api_ptr, pszFrontAddress)
+
+    def GetTradingDay(self, ):
+        '''获取当前交易日
+@retrun 获取到的交易日
+@remark 只有登录成功后,才能得到正确的交易日'''
+        return tou(_ctp_Md.GetTradingDay(self.api_ptr, ))
+
+    def Join(self, ):
+        '''等待接口线程结束运行
+@return 线程退出代码'''
+        return _ctp_Md.Join(self.api_ptr, )
+
+
+    def UnSubscribeMarketData(self, InstrumentIDs):
+        """订阅/退订行情。
+        @param ppInstrumentIDs list of 合约ID
+        """
+        return _ctp_Md.UnSubscribeMarketData(self.api_ptr, InstrumentIDs)
+
+    def Release(self, ):
+        '''删除接口对象本身
+@remark 不再使用本接口对象时,调用该函数删除接口对象'''
+        return _ctp_Md.Release(self.api_ptr, )
 
