@@ -430,9 +430,12 @@ class Coordinator(ManagedAgent,Updateable):
             #cday = contract.days[-1]
             #contract.volume = cday.last_dvolume
             #contract.volume = contract.last_tick.dvolume
-            contract.volume = contract.last_dvolume
-            drange = (contract.last_drange)/contract.ctype.unit
-            contract.volume_per_unit = contract.volume / drange if drange > 0 else 0
+            try:
+                contract.volume = contract.last_dvolume
+                drange = (contract.last_drange)/contract.ctype.unit
+                contract.volume_per_unit = contract.volume / drange if drange > 0 else 0
+            except as inst:
+                print('except:',inst)
             #print(contract.name,contract.volume,drange,contract.volume_per_unit)
         #print([(c.name,c.volume) for c in contracts])
         rev = [c for c in contracts if c.volume > volume_threshold and c.volume_per_unit >= unit_threshold2]
