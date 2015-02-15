@@ -434,7 +434,7 @@ class Coordinator(ManagedAgent,Updateable):
                 contract.volume = contract.last_dvolume
                 drange = (contract.last_drange)/contract.ctype.unit
                 contract.volume_per_unit = contract.volume / drange if drange > 0 else 0
-            except as inst:
+            except IndexError as inst:
                 print('except:',inst)
             #print(contract.name,contract.volume,drange,contract.volume_per_unit)
         #print([(c.name,c.volume) for c in contracts])

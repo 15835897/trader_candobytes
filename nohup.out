@@ -1,0 +1,9 @@
+SaveAgent initialized
+scheduler starting...
+2015-02-14 10:01:19.902347 16 0 0
+21521
+Traceback (most recent call last):
+  File "red.py", line 37, in <module>
+    time.sleep(60)
+KeyboardInterrupt
+Exception KeyboardInterrupt: KeyboardInterrupt() in <module 'threading' from '/usr/local/lib/python3.3/threading.py'> ignored
